@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진채형파일전송기</title>
+    <style>
+        @font-face {
+            font-family: 'BoldRound';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2507-2@1.0/BoldDungGeunMo.woff2') format('woff2');
+            font-weight: normal;
+            font-display: swap;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'BoldRound', monospace;
+            background: #fff;
+            color: #000;
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .tabs {
+            display: flex;
+            border: 2px solid #000;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #fff;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        .tab:first-child {
+            border-right: 1px solid #000;
+        }
+        
+        .tab.active {
+            background: #000;
+            color: #fff;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+        
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tab-content {
+            display: none;
+            flex: 1;
+        }
+        
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .drop-area {
+            border: 3px dashed #000;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .drop-area:hover {
+            background: #f9f9f9;
+        }
+        
+        .drop-area.drag-over {
+            background: #f0f0f0;
+            border-style: solid;
+        }
+        
+        .drop-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .drop-sub {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .file-info {
+            background: #f9f9f9;
+            border: 1px solid #000;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .file-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        
+        .file-size {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .code-section {
+            border: 2px solid #000;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .code-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .code-display {
+            background: #000;
+            color: #fff;
+            padding: 15px;
+            font-size: 28px;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            user-select: all;
+        }
+        
+        .copy-btn {
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            float: right;
+        }
+        
+        .copy-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .code-input {
+            border: 2px solid #000;
+            padding: 15px;
+            font-size: 20px;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 6px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #333;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+        }
+        
+        .progress-container {
+            background: #f0f0f0;
+            border: 2px solid #000;
+            height: 30px;
+            margin: 20px 0;
+            display: none;
+            position: relative;
+        }
+        
+        .progress-bar {
+            background: #000;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .status {
+            background: #f9f9f9;
+            border: 1px solid #000;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+            font-weight: bold;
+        }
+        
+        .status.error {
+            background: #ffe6e6;
+            border-color: #ff0000;
+            color: #cc0000;
+        }
+        
+        .status.success {
+            background: #e6ffe6;
+            border-color: #00cc00;
+            color: #006600;
+        }
+        
+        .status.info {
+            background: #e6f3ff;
+            border-color: #0066cc;
+            color: #004499;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .step-indicator {
+            background: #f0f0f0;
+            border: 1px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .connection-info {
+            background: #f9f9f9;
+            border: 1px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .answer-section {
+            border: 2px solid #000;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .answer-input {
+            border: 1px solid #000;
+            padding: 10px;
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">진채형파일전송기</h1>
+            <p class="subtitle">4자리 코드로 쉽게 파일전송</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('send')">파일 보내기</button>
+            <button class="tab" onclick="switchTab('receive')">파일 받기</button>
+        </div>
+        
+        <div class="content">
+            <div class="tab-content active" id="send-tab">
+                <div class="step-indicator">
+                    <strong>1단계:</strong> 보낼 파일을 선택하세요
+                </div>
+                
+                <div class="drop-area" id="dropArea">
+                    <div class="drop-text">파일을 여기에 드래그하세요</div>
+                    <div class="drop-sub">또는 클릭하여 선택</div>
+                </div>
+                <input type="file" id="fileInput" style="display: none;">
+                
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+                
+                <div class="step-indicator hidden" id="step2">
+                    <strong>2단계:</strong> 전송 코드를 생성하세요
+                </div>
+                
+                <button class="btn hidden" id="generateBtn" onclick="generateCode()">전송 코드 생성</button>
+                
+                <div class="code-section" id="codeSection">
+                    <div class="code-title">전송 코드 (받는 사람에게 전달)</div>
+                    <div class="code-display" id="codeDisplay"></div>
+                    <button class="copy-btn" onclick="copyCode()">복사</button>
+                    <div style="clear: both;"></div>
+                </div>
+                
+                <div class="step-indicator hidden" id="step3">
+                    <strong>3단계:</strong> 받는 사람이 연결할 때까지 기다리세요
+                </div>
+                
+                <div class="answer-section" id="answerSection">
+                    <div class="code-title">받는 사람의 응답 코드를 붙여넣으세요</div>
+                    <textarea class="answer-input" id="answerInput" placeholder="받는 사람으로부터 받은 응답 코드를 여기에 붙여넣으세요"></textarea>
+                    <button class="btn" onclick="processAnswer()">연결하기</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="receive-tab">
+                <div class="step-indicator">
+                    <strong>1단계:</strong> 보내는 사람으로부터 받은 전송 코드를 입력하세요
+                </div>
+                
+                <div class="input-section">
+                    <label class="input-label">전송 코드</label>
+                    <input type="text" class="code-input" id="codeInput" placeholder="4자리 숫자" maxlength="4" pattern="[0-9]{4}">
+                </div>
+                
+                <button class="btn" id="connectBtn" onclick="connectToPeer()">연결 준비</button>
+                
+                <div class="step-indicator hidden" id="receive-step2">
+                    <strong>2단계:</strong> 아래 응답 코드를 복사해서 보내는 사람에게 전달하세요
+                </div>
+                
+                <div class="code-section" id="answerCodeSection">
+                    <div class="code-title">응답 코드 (보내는 사람에게 전달)</div>
+                    <textarea class="answer-input" id="answerDisplay" readonly></textarea>
+                    <button class="copy-btn" onclick="copyAnswer()">복사</button>
+                    <div style="clear: both;"></div>
+                </div>
+                
+                <div class="connection-info" id="connectionInfo">
+                    <strong>파일 정보:</strong>
+                    <div id="receivingFileName"></div>
+                    <div id="receivingFileSize"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+        
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let peerConnection = null;
+        let dataChannel = null;
+        let isReceiver = false;
+        let fileBuffer = [];
+        let receivedSize = 0;
+        let totalSize = 0;
+        let fileName = '';
+        let currentCode = '';
+        
+        const CHUNK_SIZE = 16384;
+        
+        const iceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ];
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'send') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('send-tab').classList.add('active');
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('receive-tab').classList.add('active');
+            }
+            
+            resetState();
+        }
+        
+        function resetState() {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (dataChannel) {
+                dataChannel.close();
+                dataChannel = null;
+            }
+            
+            selectedFile = null;
+            fileBuffer = [];
+            receivedSize = 0;
+            totalSize = 0;
+            fileName = '';
+            currentCode = '';
+            isReceiver = false;
+            
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('codeSection').style.display = 'none';
+            document.getElementById('answerSection').style.display = 'none';
+            document.getElementById('answerCodeSection').style.display = 'none';
+            document.getElementById('generateBtn').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('receive-step2').classList.add('hidden');
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('progressText').innerHTML = '';
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('connectionInfo').style.display = 'none';
+            document.getElementById('codeInput').value = '';
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerDisplay').value = '';
+        }
+        
+        function setupDropArea() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropArea.addEventListener('click', () => fileInput.click());
+            
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('drag-over');
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('drag-over');
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
+        
+        function handleFile(file) {
+            selectedFile = file;
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'block';
+            document.getElementById('generateBtn').classList.remove('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+        
+        function formatFileSize(bytes) {
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            if (bytes === 0) return '0 B';
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        async function generateCode() {
+            if (!selectedFile) return;
+            
+            try {
+                showStatus('전송 코드를 생성하는 중...', 'info');
+                
+                peerConnection = new RTCPeerConnection({ iceServers });
+                
+                dataChannel = peerConnection.createDataChannel('fileTransfer', {
+                    ordered: true
+                });
+                
+                setupDataChannelForSender();
+                
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                await waitForIceGathering();
+                
+                currentCode = Math.floor(1000 + Math.random() * 9000).toString();
+                
+                const connectionData = {
+                    code: currentCode,
+                    offer: peerConnection.localDescription,
+                    fileInfo: {
+                        name: selectedFile.name,
+                        size: selectedFile.size
+                    }
+                };
+                
+                document.getElementById('codeDisplay').textContent = currentCode;
+                document.getElementById('codeSection').style.display = 'block';
+                document.getElementById('step3').classList.remove('hidden');
+                document.getElementById('answerSection').style.display = 'block';
+                
+                localStorage.setItem('connection_' + currentCode, JSON.stringify(connectionData));
+                
+                showStatus('전송 코드가 생성되었습니다! 받는 사람에게 4자리 코드를 전달하세요.', 'success');
+                
+            } catch (error) {
+                showStatus('코드 생성 실패: ' + error.message, 'error');
+                console.error('Generate code error:', error);
+            }
+        }
+        
+        function setupDataChannelForSender() {
+            dataChannel.onopen = () => {
+                showStatus('연결되었습니다. 파일 전송을 시작합니다.', 'success');
+                setTimeout(() => sendFile(), 100);
+            };
+            
+            dataChannel.onerror = (error) => {
+                showStatus('전송 오류가 발생했습니다.', 'error');
+                console.error('DataChannel error:', error);
+            };
+        }
+        
+        async function connectToPeer() {
+            const code = document.getElementById('codeInput').value.trim();
+            if (code.length !== 4 || !/^\d{4}$/.test(code)) {
+                showStatus('올바른 4자리 숫자 코드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            const connectionData = localStorage.getItem('connection_' + code);
+            if (!connectionData) {
+                showStatus('유효하지 않은 코드입니다.', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('연결을 준비하는 중...', 'info');
+                isReceiver = true;
+                
+                const data = JSON.parse(connectionData);
+                fileName = data.fileInfo.name;
+                totalSize = data.fileInfo.size;
+                
+                document.getElementById('receivingFileName').textContent = '파일명: ' + fileName;
+                document.getElementById('receivingFileSize').textContent = '크기: ' + formatFileSize(totalSize);
+                document.getElementById('connectionInfo').style.display = 'block';
+                
+                peerConnection = new RTCPeerConnection({ iceServers });
+                
+                peerConnection.ondatachannel = (event) => {
+                    dataChannel = event.channel;
+                    setupDataChannelForReceiver();
+                };
+                
+                await peerConnection.setRemoteDescription(data.offer);
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                await waitForIceGathering();
+                
+                document.getElementById('answerDisplay').value = JSON.stringify(peerConnection.localDescription);
+                document.getElementById('answerCodeSection').style.display = 'block';
+                document.getElementById('receive-step2').classList.remove('hidden');
+                
+                showStatus('응답 코드가 생성되었습니다. 보내는 사람에게 전달하세요.', 'success');
+                
+            } catch (error) {
+                showStatus('연결 준비 실패: ' + error.message, 'error');
+                console.error('Connect error:', error);
+            }
+        }
+        
+        function setupDataChannelForReceiver() {
+            dataChannel.onmessage = (event) => {
+                if (typeof event.data === 'string') {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'fileStart') {
+                        fileBuffer = [];
+                        receivedSize = 0;
+                        document.getElementById('progressContainer').style.display = 'block';
+                        showStatus('파일을 받는 중...', 'info');
+                    } else if (message.type === 'fileEnd') {
+                        const blob = new Blob(fileBuffer);
+                        downloadFile(blob, fileName);
+                        
+                        showStatus('파일 다운로드가 완료되었습니다!', 'success');
+                        document.getElementById('progressContainer').style.display = 'none';
+                    }
+                } else {
+                    fileBuffer.push(event.data);
+                    receivedSize += event.data.byteLength;
+                    updateProgress(receivedSize, totalSize);
+                }
+            };
+            
+            dataChannel.onopen = () => {
+                showStatus('연결되었습니다. 파일을 받을 준비가 완료되었습니다.', 'success');
+            };
+            
+            dataChannel.onerror = (error) => {
+                showStatus('수신 오류가 발생했습니다.', 'error');
+                console.error('Receive error:', error);
+            };
+        }
+        
+        async function processAnswer() {
+            const answerText = document.getElementById('answerInput').value.trim();
+            if (!answerText) {
+                showStatus('응답 코드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('연결을 설정하는 중...', 'info');
+                const answer = JSON.parse(answerText);
+                await peerConnection.setRemoteDescription(answer);
+                showStatus('연결이 설정되었습니다. 상대방이 준비되면 전송이 시작됩니다.', 'success');
+            } catch (error) {
+                showStatus('응답 코드가 올바르지 않습니다: ' + error.message, 'error');
+                console.error('Process answer error:', error);
+            }
+        }
+        
+        async function sendFile() {
+            if (!selectedFile || !dataChannel || dataChannel.readyState !== 'open') {
+                showStatus('연결이 준비되지 않았습니다.', 'error');
+                return;
+            }
+            
+            try {
+                const arrayBuffer = await selectedFile.arrayBuffer();
+                const totalChunks = Math.ceil(arrayBuffer.byteLength / CHUNK_SIZE);
+                
+                dataChannel.send(JSON.stringify({
+                    type: 'fileStart',
+                    name: selectedFile.name,
+                    size: selectedFile.size
+                }));
+                
+                document.getElementById('progressContainer').style.display = 'block';
+                showStatus('파일을 전송하는 중...', 'info');
+                
+                for (let i = 0; i < totalChunks; i++) {
+                    const start = i * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, arrayBuffer.byteLength);
+                    const chunk = arrayBuffer.slice(start, end);
+                    
+                    while (dataChannel.bufferedAmount > CHUNK_SIZE * 64) {
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                    
+                    dataChannel.send(chunk);
+                    updateProgress(end, arrayBuffer.byteLength);
+                }
+                
+                dataChannel.send(JSON.stringify({ type: 'fileEnd' }));
+                
+                showStatus('파일 전송이 완료되었습니다!', 'success');
+                
+            } catch (error) {
+                showStatus('파일 전송 실패: ' + error.message, 'error');
+                console.error('Send file error:', error);
+            }
+        }
+        
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = 
+                `${percentage}% (${formatFileSize(current)} / ${formatFileSize(total)})`;
+        }
+        
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+        
+        function copyCode() {
+            const code = document.getElementById('codeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showStatus('코드가 클립보드에 복사되었습니다.', 'success');
+            }).catch(() => {
+                showStatus('복사에 실패했습니다. 수동으로 복사해주세요.', 'error');
+            });
+        }
+        
+        function copyAnswer() {
+            const answer = document.getElementById('answerDisplay').value;
+            navigator.clipboard.writeText(answer).then(() => {
+                showStatus('응답 코드가 클립보드에 복사되었습니다.', 'success');
+            }).catch(() => {
+                showStatus('복사에 실패했습니다. 수동으로 복사해주세요.', 'error');
+            });
+        }
+        
+        async function waitForIceGathering() {
+            return new Promise((resolve) => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                    return;
+                }
+                
+                const checkState = () => {
+                    if (peerConnection.iceGatheringState === 'complete') {
+                        peerConnection.removeEventListener('icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
+                
+                peerConnection.addEventListener('icegatheringstatechange', checkState);
+                
+                setTimeout(() => {
+                    peerConnection.removeEventListener('icegatheringstatechange', checkState);
+                    resolve();
+                }, 3000);
+            });
+        }
+        
+        setupDropArea();
+        
+        window.addEventListener('beforeunload', () => {
+            if (currentCode) {
+                localStorage.removeItem('connection_' + currentCode);
+            }
+        });
+    </script>
+</body>
+</html>
